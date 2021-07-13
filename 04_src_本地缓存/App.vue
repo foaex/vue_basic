@@ -1,0 +1,132 @@
+<template>
+  <div id="app">
+    <div class="todo-container">
+      <div class="todo-wrap">
+        <Header @add-todo="addTodo"/>
+        <List :todos="todos" @change-checked='changeChecked' @delete-todo='deleteTodo'/>
+        <Footer :todos="todos" :allCheck='allCheck' @delete-all='deleteAll'/>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import Header from './components/Header.vue'
+import List from './components/List.vue'
+import Footer from './components/Footer.vue'
+
+export default {
+  name: 'App',
+  components: {
+    Header,
+    List,
+    Footer
+  },
+  data () {
+    const localData = localStorage.getItem('todos')
+    let todos
+    try {
+      todos = JSON.parse(localData) || []
+    } catch (error) {
+      alert('本地缓存数据已失效,数据已重置')
+      localStorage.removeItem('todos')
+      todos = []
+    }
+    return {
+      todos
+    }
+  },
+  watch:{
+    // 默认是浅监控数据
+    todos:{
+      // 声明是深度监测
+      deep:true,
+      handler(value){
+        localStorage.setItem('todos',JSON.stringify(value))
+      }
+    }
+  },
+  methods: {
+    // 自定义事件 当Header函数触发add-todo方法 就会调用addTodo方法
+    addTodo(todoObj){
+      this.todos.unshift(todoObj)
+    },
+    // 修改事件是否完成
+    changeChecked(id,done){
+      this.todos = this.todos.map(item=>{
+        if(item.id===id){
+          return {...item,done}
+        }else{
+          return item
+        }
+      })
+    },
+    // 删除事件函数
+    deleteTodo(id){
+      // 通过遍历寻找要删除的id 如果不是要删除的 就返回到新数组中
+      this.todos = this.todos.filter(item=>{
+        return item.id !== id
+      })
+    },
+    // 全选或者全不选
+    allCheck(done){
+      this.todos = this.todos.map(item=>{
+        return {...item,done}
+      })
+    },
+    // 清除所有已经做完的
+    deleteAll(){
+      // 将所有done值为真的都过滤掉 剩下done值为false的
+      this.todos = this.todos.filter(item=>{
+        return !item.done
+      })
+    }
+  },
+}
+</script>
+
+<style>
+/*base*/
+body {
+  background: #fff;
+}
+
+.btn {
+  display: inline-block;
+  padding: 4px 12px;
+  margin-bottom: 0;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.btn-danger {
+  color: #fff;
+  background-color: #da4f49;
+  border: 1px solid #bd362f;
+}
+
+.btn-danger:hover {
+  color: #fff;
+  background-color: #bd362f;
+}
+
+.btn:focus {
+  outline: none;
+}
+
+.todo-container {
+  width: 600px;
+  margin: 0 auto;
+}
+.todo-container .todo-wrap {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+</style>
